@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Options;
 
-namespace BTCPayServer.Plugins.Template;
+namespace BTCPayServer.Plugins.OAuth;
 
 public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<PluginDbContext>
 {
@@ -20,7 +20,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<PluginDbCo
 
 public class PluginDbContextFactory : BaseDbContextFactory<PluginDbContext>
 {
-    public PluginDbContextFactory(IOptions<DatabaseOptions> options) : base(options, "BTCPayServer.Plugins.Template")
+    public PluginDbContextFactory(IOptions<DatabaseOptions> options) : base(options, "BTCPayServer.Plugins.OAuth")
     {
     }
 

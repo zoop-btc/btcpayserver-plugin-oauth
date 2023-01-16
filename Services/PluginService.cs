@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using BTCPayServer.Plugins.Template.Data;
+using BTCPayServer.Plugins.OAuth.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace BTCPayServer.Plugins.Template.Services;
+namespace BTCPayServer.Plugins.OAuth.Services;
 
 public class PluginService
 {
