@@ -2,25 +2,25 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using BTCPayServer.Plugins.OAuth.Data;
+using BTCPayServer.Plugins.OAuth.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BTCPayServer.Plugins.OAuth;
 
-public class PluginDbContext : DbContext
+public class OAuthPluginDbContext : DbContext
 {
     private readonly bool _designTime;
 
-    public PluginDbContext(DbContextOptions<PluginDbContext> options, bool designTime = false)
+    public OAuthPluginDbContext(DbContextOptions<OAuthPluginDbContext> options, bool designTime = false)
         : base(options)
     {
         _designTime = designTime;
     }
 
-    public DbSet<PluginData> PluginRecords { get; set; }
-
+    // public DbSet<OauthPluginData> PluginRecords { get; set; }
+    public DbSet<OAuthSession> OAuthSessions { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

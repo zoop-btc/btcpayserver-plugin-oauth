@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
-using BTCPayServer.Plugins.OAuth.Data;
+using BTCPayServer.Plugins.OAuth.Data.Models;
 using BTCPayServer.Plugins.OAuth.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,9 +13,9 @@ namespace BTCPayServer.Plugins.OAuth;
 [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewProfile)]
 public class UIPluginController : Controller
 {
-    private readonly PluginService _PluginService;
+    private readonly OAuthService _PluginService;
 
-    public UIPluginController(PluginService PluginService)
+    public UIPluginController(OAuthService PluginService)
     {
         _PluginService = PluginService;
     }
@@ -29,5 +29,5 @@ public class UIPluginController : Controller
 
 public class PluginPageViewModel
 {
-    public List<PluginData> Data { get; set; }
+    public List<OAuthSession> Data { get; set; }
 }
