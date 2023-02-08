@@ -22,8 +22,6 @@ public class SessionValid
         Valid = valid;
         Message = message;
     }
-
-    // public OAuthSession Session {get;set;}
 }
 
 public class OAuthService
@@ -40,7 +38,6 @@ public class OAuthService
         _settingsRepository = settingsRepository;
         RefreshOAuthSettings();
     }
-
     public void RefreshOAuthSettings()
     {
         _oauthSettings = _settingsRepository.GetSettingAsync<OAuthConf>().Result;
@@ -50,7 +47,6 @@ public class OAuthService
     {
         return _oauthSettings;
     }
-
     public async Task<OAuthSession> GetSessionByToken(string token)
     {
         Console.WriteLine($" Received token for introspection: {token}");
@@ -90,9 +86,15 @@ public class OAuthService
         {
             var result = context.OAuthSessions.Add(session);
             context.SaveChanges();
+            return session;
+        }
+        else
+        {
+            //We can throw here because this is only run from AuthenticationHandler
+            throw new Exception(validator.Message);
         }
 
-        return session;
+
     }
 
 #nullable enable
@@ -110,15 +112,18 @@ public class OAuthService
         //Check Scopes
         var validscopes = _oauthSettings.AllowedScopes.Split(';');
         var tokenscopes = session.Scope.Split(' ');
-        var scopes = tokenscopes.Intersect(validscopes,StringComparer.OrdinalIgnoreCase);
+        var scopes = tokenscopes.Intersect(validscopes, StringComparer.OrdinalIgnoreCase);
 
         // if (!(session.Scope.Contains("payportal") || session.Scope.Contains("btcpay")))
         if (!scopes.Any())
             return new SessionValid(false, $"token does not contain any accepted scopes, please make sure it has any of '{_oauthSettings.AllowedScopes}'");
 
         //TODO: saner email check with regex maybe
-        if(!(session.Email.Contains("@")))
+        if (!(session.Email.Contains("@")))
             return new SessionValid(false, $"BTCPayServer expects users to have email set. Found {session.Email} instead.");
+
+        if (session.ExpiresAt < DateTimeOffset.UtcNow.ToUnixTimeSeconds())
+            return new SessionValid(false, "Token expired");
 
         return new SessionValid(true, $"Token is valid until {DateTime.UnixEpoch.AddSeconds(session.ExpiresAt).ToShortDateString()} {DateTime.UnixEpoch.AddSeconds(session.ExpiresAt).ToShortTimeString()}");
     }
