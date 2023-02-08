@@ -57,12 +57,7 @@ public class OAuthService
         var session = await context.OAuthSessions.FindAsync(token);
 
         if (session is not null)
-        {
-            Console.WriteLine($"Session for token {token} has been found in Database:");
-            Console.WriteLine(JsonConvert.SerializeObject(session, Formatting.Indented));
-            // Console.WriteLine($"Email is: {session.Extra.Email}");
             return session;
-        }
 
         //Fetch it from hydra
         var data = new[] { new KeyValuePair<string, string>("token", token) };
@@ -73,6 +68,11 @@ public class OAuthService
 
         //Build the session object by parsing the json
         session = System.Text.Json.JsonSerializer.Deserialize<OAuthSession>(json);
+
+        //preliminary test if it's active
+        if (!session.Active)
+            throw new Exception("Token rejected by OAuth Provider.");
+
         var sessionjson = JObject.Parse(json);
         session.Token = token;
         session.Email = (string)sessionjson?["ext"]?["email"] ?? "";
