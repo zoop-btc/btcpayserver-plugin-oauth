@@ -18,22 +18,6 @@ namespace BTCPayServer.Plugins.OAuth.Migrations
                 .HasDefaultSchema("BTCPayServer.Plugins.OAuth")
                 .HasAnnotation("ProductVersion", "6.0.9");
 
-            modelBuilder.Entity("BTCPayServer.Plugins.OAuth.Data.Models.ExtraData", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Email")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Identifier")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ExtraData", "BTCPayServer.Plugins.OAuth");
-                });
-
             modelBuilder.Entity("BTCPayServer.Plugins.OAuth.Data.Models.OAuthSession", b =>
                 {
                     b.Property<string>("Token")
@@ -42,16 +26,19 @@ namespace BTCPayServer.Plugins.OAuth.Migrations
                     b.Property<bool>("Active")
                         .HasColumnType("boolean");
 
-                    b.Property<long>("AuthenticatedAt")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("Audience")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ClientId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
                         .HasColumnType("TEXT");
 
                     b.Property<long>("ExpiresAt")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("ExtraId")
+                    b.Property<string>("Identifier")
                         .HasColumnType("TEXT");
 
                     b.Property<long>("IssuedAt")
@@ -77,18 +64,7 @@ namespace BTCPayServer.Plugins.OAuth.Migrations
 
                     b.HasKey("Token");
 
-                    b.HasIndex("ExtraId");
-
                     b.ToTable("OAuthSessions", "BTCPayServer.Plugins.OAuth");
-                });
-
-            modelBuilder.Entity("BTCPayServer.Plugins.OAuth.Data.Models.OAuthSession", b =>
-                {
-                    b.HasOne("BTCPayServer.Plugins.OAuth.Data.Models.ExtraData", "Extra")
-                        .WithMany()
-                        .HasForeignKey("ExtraId");
-
-                    b.Navigation("Extra");
                 });
 #pragma warning restore 612, 618
         }

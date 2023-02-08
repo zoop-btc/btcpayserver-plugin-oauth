@@ -91,15 +91,15 @@ namespace BTCPayServer.Plugins.OAuth.Auth
             private async Task<AuthenticateResult> AuthenticateOAuthUser(OAuthSession session)
             {
                 //We get the user if he already exists
-                var user = (await _userManager.FindByIdAsync(session.Subject)) ?? await _userManager.FindByEmailAsync(session.Extra.Email);
+                var user = (await _userManager.FindByIdAsync(session.Subject)) ?? await _userManager.FindByEmailAsync(session.Email);
 
                 //Should user not exist we create a new one
                 if (user is null)
                 {
                     var newuser = new ApplicationUser
                     {
-                        UserName = session.Extra.Email,
-                        Email = session.Extra.Email,
+                        UserName = session.Email,
+                        Email = session.Email,
                         RequiresEmailConfirmation = false,
                         Created = DateTimeOffset.UtcNow
                     };
@@ -113,7 +113,7 @@ namespace BTCPayServer.Plugins.OAuth.Auth
                     var result = await _userManager.CreateAsync(newuser, password);
                     if (result.Succeeded)
                     {
-                        _logger.LogInformation($"Registered new user: {session.Extra.Email} with ID {session.Subject}");
+                        _logger.LogInformation($"Registered new user: {session.Email} with ID {session.Subject}");
                         user = await _userManager.FindByIdAsync(session.Subject);
 
                     }

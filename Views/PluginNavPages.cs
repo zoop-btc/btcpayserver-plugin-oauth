@@ -1,6 +1,6 @@
 namespace BTCPayServer.Plugins.OAuth.Views;
 
-public enum PluginNavPages
+public enum OAuthPluginNavPages
 {
     Index
 }

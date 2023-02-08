@@ -1,10 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Plugins.OAuth.Data.Models;
+using BTCPayServer.Plugins.OAuth.Data;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using BTCPayServer.Abstractions.Contracts;
 
 namespace BTCPayServer.Plugins.OAuth.Services;
 
@@ -24,14 +28,27 @@ public class SessionValid
 
 public class OAuthService
 {
+    private OAuthConf _oauthSettings;
     private readonly OAuthDbContextFactory _PluginDbContextFactory;
-
+    private readonly ISettingsRepository _settingsRepository;
     private readonly HttpClient _client;
 
-    public OAuthService(OAuthDbContextFactory PluginDbContextFactory)
+    public OAuthService(OAuthDbContextFactory PluginDbContextFactory, ISettingsRepository settingsRepository)
     {
         _client = new HttpClient();
         _PluginDbContextFactory = PluginDbContextFactory;
+        _settingsRepository = settingsRepository;
+        RefreshOAuthSettings();
+    }
+
+    public void RefreshOAuthSettings()
+    {
+        _oauthSettings = _settingsRepository.GetSettingAsync<OAuthConf>().Result;
+    }
+
+    public OAuthConf GetSettings()
+    {
+        return _oauthSettings;
     }
 
     public async Task<OAuthSession> GetSessionByToken(string token)
@@ -47,33 +64,32 @@ public class OAuthService
         {
             Console.WriteLine($"Session for token {token} has been found in Database:");
             Console.WriteLine(JsonConvert.SerializeObject(session, Formatting.Indented));
+            // Console.WriteLine($"Email is: {session.Extra.Email}");
             return session;
         }
 
         //Fetch it from hydra
         var data = new[] { new KeyValuePair<string, string>("token", token) };
         var content = new FormUrlEncodedContent(data);
-        var res = await _client.PostAsync("https://admin.hydra.testnet.brondings.com/admin/oauth2/introspect", content);
+        var res = await _client.PostAsync(_oauthSettings.Intro_Endpoint, content);
         res.EnsureSuccessStatusCode();
         var json = await res.Content.ReadAsStringAsync();
 
+        //Build the session object by parsing the json
         session = System.Text.Json.JsonSerializer.Deserialize<OAuthSession>(json);
+        var sessionjson = JObject.Parse(json);
         session.Token = token;
-        session.Extra.Id = token;
-
+        session.Email = (string)sessionjson?["ext"]?["email"] ?? "";
+        session.Identifier = (string)sessionjson?["ext"]?["identifier"] ?? "";
+        JArray audience = (JArray)sessionjson["aud"];
+        session.Audience = String.Join(" ", audience.Select(o => o.ToString()));
 
         //If the session is valid we persist it
         var validator = checkSessionValidity(session);
         if (validator.Valid)
         {
-            Console.WriteLine("Persisting new session into database");
             var result = context.OAuthSessions.Add(session);
-            try{
             context.SaveChanges();
-            }catch(Exception e){
-                Console.WriteLine(e);
-            }
-            Console.WriteLine($"DB result is {result}");
         }
 
         return session;
@@ -83,43 +99,28 @@ public class OAuthService
     //TODO: I should be able to do this more elegantly
     public SessionValid checkSessionValidity(OAuthSession? session)
     {
-        // var sessionvalid = new SessionValid();
         //Check for null
         if (session is null)
             return new SessionValid(false, "could not extract session from token, it is null");
+
         //Check if it's active
         if (!session.Active)
             return new SessionValid(false, "token is marked as inactive by OAuth provider");
-        //Check if it's expired
-        var unix_time = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        if (session.ExpiresAt < unix_time)
-            return new SessionValid(false, "token expired");
-        //Check if it's only valid in the future
-        if (session.NotBefore > unix_time)
-            return new SessionValid(false, "token not yet valid");
+
         //Check Scopes
+        //TODO: make valid scopes configurable
         if (!(session.Scope.Contains("payportal") || session.Scope.Contains("btcpay")))
             return new SessionValid(false, "token does not contain any accepted scopes");
-        //Check issuer
-        // var disco = await _client.GetDiscoveryDocumentAsync(session.I);
-        //TODO Settings
-        if (session.Issuer != "https://hydra.testnet.brondings.com/")
-            return new SessionValid(false, "token is not from configured issuer");
 
-        //TODO check that email field is populated
+        //TODO: saner email check with regex maybe
+        if(!(session.Email.Contains("@")))
+            return new SessionValid(false, $"BTCPayServer expects users to have email set. Found {session.Email} instead.");
 
-        return new SessionValid(true, $"token is valid until {DateTime.UnixEpoch.AddSeconds(session.ExpiresAt).ToShortDateString()} {DateTime.UnixEpoch.AddSeconds(session.ExpiresAt).ToShortTimeString()}");
+        return new SessionValid(true, $"Token is valid until {DateTime.UnixEpoch.AddSeconds(session.ExpiresAt).ToShortDateString()} {DateTime.UnixEpoch.AddSeconds(session.ExpiresAt).ToShortTimeString()}");
     }
 #nullable disable
-    // public async Task AddTestDataRecord()
-    // {
-    //     await using OAuthPluginDbContext context = _PluginDbContextFactory.CreateContext();
 
-    //     await context.PluginRecords.AddAsync(new OauthPluginData { Timestamp = DateTimeOffset.UtcNow });
-    //     await context.SaveChangesAsync();
-    // }
-
-    public async Task<List<OAuthSession>> Get()
+    public async Task<List<OAuthSession>> GetSessions()
     {
         await using OAuthPluginDbContext context = _PluginDbContextFactory.CreateContext();
 

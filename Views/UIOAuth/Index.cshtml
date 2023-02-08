@@ -1,0 +1,37 @@
+@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Plugins.OAuth.Views
+@model BTCPayServer.Plugins.OAuth.OAuthPageViewModel
+@{
+    ViewData.SetActivePage(OAuthPluginNavPages.Index, "OAuth Resource Provider Plugin");
+}
+<h1>@ViewData["Title"]</h1>
+<p>
+    This plugin makes BTCPayServer behave as OAuth2 Resource! It will only introspect tokens and allow them access based
+    on scope. <br>
+    <span class="text-danger">The author of this plugin does not advise its use since this code was not reviewed by an
+        experienced C# developer.</span>
+</p>
+<br>
+<div class="row">
+    <form method="post">
+        <div class="form-group mb-5">
+            <h4 class="mb-3">Configuration</h4>
+            <div class="form-check my-3">
+                <label asp-for="OAuthConfig.Intro_Endpoint" class="form-label"></label>
+                <input asp-for="OAuthConfig.Intro_Endpoint" data-fill="server" class="form-control" />
+                @* <span asp-validation-for="KratosConfig.KratosPublic" class="text-danger"></span> *@
+            </div>
+        </div>
+        <button id="SaveButton" type="submit" class="btn btn-primary">Save</button>
+    </form>
+</div>
+<h4 class="mb-3">Current Sessions</h4>
+<p>
+    Current Sessions inside the database:
+</p>
+<ul class="list-group">
+    @foreach (var item in Model.Sessions)
+    {
+        <li class="list-group-item">@item.Active at @item.Token</li>
+    }
+</ul>

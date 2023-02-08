@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Plugins.OAuth.Data.Models
 {
@@ -31,20 +33,14 @@ namespace BTCPayServer.Plugins.OAuth.Data.Models
         public Int64 ExpiresAt { get; set; }
 
         [JsonPropertyName("iat")]
-
         public Int64 IssuedAt { get; set; }
 
-        [JsonPropertyName("authenticated_at")]
-
-        public Int64 AuthenticatedAt { get; set; }
-
         [JsonPropertyName("nbf")]
-
         public Int64 NotBefore { get; set; }
 
-        [NotMapped]
+        [JsonIgnore]
         [JsonPropertyName("aud")]
-        public string[] Audience { get; set; }
+        public string Audience { get; set; }
 
         [JsonPropertyName("token_type")]
         public string TokenType { get; set; }
@@ -52,21 +48,12 @@ namespace BTCPayServer.Plugins.OAuth.Data.Models
         [JsonPropertyName("token_use")]
         public string TokenUse { get; set; }
 
-        [JsonPropertyName("ext")]
-        public ExtraData Extra { get; set; }
-    }
-
-    public class ExtraData
-    {
-        [Key]
-        public string Id { get; set; }
-
         [JsonPropertyName("email")]
         public string Email { get; set; }
 
-
         [JsonPropertyName("identifier")]
         public string Identifier { get; set; }
+
     }
 
 }
