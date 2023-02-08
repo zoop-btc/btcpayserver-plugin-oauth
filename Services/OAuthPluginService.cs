@@ -29,14 +29,14 @@ public class SessionValid
 public class OAuthService
 {
     private OAuthConf _oauthSettings;
-    private readonly OAuthDbContextFactory _PluginDbContextFactory;
+    private readonly OAuthDbContextFactory _OAuthDbContextFactory;
     private readonly ISettingsRepository _settingsRepository;
     private readonly HttpClient _client;
 
-    public OAuthService(OAuthDbContextFactory PluginDbContextFactory, ISettingsRepository settingsRepository)
+    public OAuthService(OAuthDbContextFactory OAuthDbContextFactory, ISettingsRepository settingsRepository)
     {
         _client = new HttpClient();
-        _PluginDbContextFactory = PluginDbContextFactory;
+        _OAuthDbContextFactory = OAuthDbContextFactory;
         _settingsRepository = settingsRepository;
         RefreshOAuthSettings();
     }
@@ -54,7 +54,7 @@ public class OAuthService
     public async Task<OAuthSession> GetSessionByToken(string token)
     {
         Console.WriteLine($" Received token for introspection: {token}");
-        await using OAuthPluginDbContext context = _PluginDbContextFactory.CreateContext();
+        await using OAuthPluginDbContext context = _OAuthDbContextFactory.CreateContext();
 
         //Check for database entry
         Console.WriteLine("Looking up session in database");
@@ -71,7 +71,7 @@ public class OAuthService
         //Fetch it from hydra
         var data = new[] { new KeyValuePair<string, string>("token", token) };
         var content = new FormUrlEncodedContent(data);
-        var res = await _client.PostAsync(_oauthSettings.Intro_Endpoint, content);
+        var res = await _client.PostAsync(_oauthSettings.IntroEndpoint, content);
         res.EnsureSuccessStatusCode();
         var json = await res.Content.ReadAsStringAsync();
 
@@ -108,9 +108,13 @@ public class OAuthService
             return new SessionValid(false, "token is marked as inactive by OAuth provider");
 
         //Check Scopes
-        //TODO: make valid scopes configurable
-        if (!(session.Scope.Contains("payportal") || session.Scope.Contains("btcpay")))
-            return new SessionValid(false, "token does not contain any accepted scopes");
+        var validscopes = _oauthSettings.AllowedScopes.Split(';');
+        var tokenscopes = session.Scope.Split(' ');
+        var scopes = tokenscopes.Intersect(validscopes,StringComparer.OrdinalIgnoreCase);
+
+        // if (!(session.Scope.Contains("payportal") || session.Scope.Contains("btcpay")))
+        if (!scopes.Any())
+            return new SessionValid(false, $"token does not contain any accepted scopes, please make sure it has any of '{_oauthSettings.AllowedScopes}'");
 
         //TODO: saner email check with regex maybe
         if(!(session.Email.Contains("@")))
@@ -122,7 +126,7 @@ public class OAuthService
 
     public async Task<List<OAuthSession>> GetSessions()
     {
-        await using OAuthPluginDbContext context = _PluginDbContextFactory.CreateContext();
+        await using OAuthPluginDbContext context = _OAuthDbContextFactory.CreateContext();
 
         return await context.OAuthSessions.ToListAsync();
     }

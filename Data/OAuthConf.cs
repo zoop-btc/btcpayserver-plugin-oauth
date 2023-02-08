@@ -7,6 +7,10 @@ namespace BTCPayServer.Plugins.OAuth.Data
     {
         [Display(Name = "Endpoint for Token Introspection")]
         // [KratosPublicAttribute]
-        public string Intro_Endpoint { get; set; }
+        public string IntroEndpoint { get; set; }
+
+        [Display(Name = "List of allowed scopes, scope names separated by ;")]
+        // [KratosPublicAttribute]
+        public string AllowedScopes { get; set; }
     }
 }

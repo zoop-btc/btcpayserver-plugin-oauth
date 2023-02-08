@@ -27,6 +27,7 @@ public class OAuthPlugin : BaseBTCPayServerPlugin
             OAuthDbContextFactory factory = provider.GetRequiredService<OAuthDbContextFactory>();
             factory.ConfigureBuilder(o);
         });
+        services.AddHostedService<OAuthTokenCleanup>();
         services.AddAuthentication()
                 .AddScheme<OAuthAuthenticationOptions, OAuthAPIAuthenticationHandler>("OAuth.API", options => { });
         services.Configure<MvcOptions>(options =>

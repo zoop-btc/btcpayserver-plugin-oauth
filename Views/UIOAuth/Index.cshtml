@@ -17,9 +17,12 @@
         <div class="form-group mb-5">
             <h4 class="mb-3">Configuration</h4>
             <div class="form-check my-3">
-                <label asp-for="OAuthConfig.Intro_Endpoint" class="form-label"></label>
-                <input asp-for="OAuthConfig.Intro_Endpoint" data-fill="server" class="form-control" />
+                <label asp-for="OAuthConfig.IntroEndpoint" class="form-label"></label>
+                <input asp-for="OAuthConfig.IntroEndpoint" data-fill="server" class="form-control" />
                 @* <span asp-validation-for="KratosConfig.KratosPublic" class="text-danger"></span> *@
+                <br>
+                <label asp-for="OAuthConfig.AllowedScopes" class="form-label"></label>
+                <input asp-for="OAuthConfig.AllowedScopes" data-fill="server" class="form-control" />
             </div>
         </div>
         <button id="SaveButton" type="submit" class="btn btn-primary">Save</button>

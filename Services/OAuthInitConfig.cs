@@ -10,7 +10,8 @@ public class OAuthInitConfig : IStartupTask
     {
         return new OAuthConf
         {
-            Intro_Endpoint = "https://admin.hydra.testnet.brondings.com/admin/oauth2/introspect"
+            IntroEndpoint = "https://admin.hydra.testnet.brondings.com/admin/oauth2/introspect",
+            AllowedScopes = "btcpay;demaistre"
         };
     }
     private readonly ISettingsRepository _settingsRepository;
